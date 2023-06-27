@@ -1,0 +1,21 @@
+<html>
+<head>
+    <title>HIIT Timer</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <main>
+        <label for="repititions">Repititions</label>
+        <input type="number" id="repetitions" value="5" />
+        <label for="interval">Interval</label>
+        <input type="number" id="interval" value="60" />
+        <label for="rest">Rest</label>
+        <input type="number" id="rest" value="30" />
+        <button id="start" onclick="start()">Start</button>
+        <button id="pause" onclick="pause()">Pause</button>
+        <button id="reset" onclick="reset()">Reset</button>
+        <div id="timer"></div>
+    </main>
+    <script src="./index.js"></script>
+</body>
+</html>
