@@ -19,9 +19,13 @@ function start() {
 
     if (!state.paused) {
         setFromInput();
+        state.startTime = Date.now();
     }
 
-    state.timer = setInterval(calculateTimer, 100);
+    state.timer = setInterval(function () {
+        calculateTimer();
+        render();
+    }, 100);
 }
 
 function setFromInput() {
@@ -29,16 +33,12 @@ function setFromInput() {
     state.currentRepetitions = getInput('repetitions');
     state.interval = getInput('interval');
     state.currentInterval = getInput('interval');
-    state.rest = getInput('rest');
-    state.startTime = Date.now();
-
-    state.currentInterval = 
+    state.rest = getInput('rest');    
 }
 
 function calculateTimer() {
     const elapsedTime = (Date.now() - state.startTime) / 1000;
     state.currentInterval = (state.interval - elapsedTime).toFixed(3);
-    render();
 }
 
 function pause() {
