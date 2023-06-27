@@ -1,16 +1,15 @@
 const state = {
     startTime: null,
     timer: null,
-    currentInterval: null,
-    currentRepetitions: null,
     paused: false,
 
     interval: null,
     repetitions: null,
     rest: null,
-}
 
-let startTime;
+    currentInterval: null,
+    currentRepetitions: null,
+}
 
 function start() {
     if (state.timer && !state.paused) {
@@ -29,11 +28,12 @@ function start() {
 }
 
 function setFromInput() {
-    state.repetitions = getInput('repetitions');
-    state.currentRepetitions = getInput('repetitions');
     state.interval = getInput('interval');
+    state.repetitions = getInput('repetitions');
+    state.rest = getInput('rest');
+
+    state.currentRepetitions = getInput('repetitions');
     state.currentInterval = getInput('interval');
-    state.rest = getInput('rest');    
 }
 
 function calculateTimer() {
@@ -47,9 +47,11 @@ function pause() {
 }
 
 function reset() {
-    pause();
     state.timer = null;
     state.paused = false;
+    clearInterval(state.timer);
+    setFromInput();
+    render();
 }
 
 function getInput(id) {
