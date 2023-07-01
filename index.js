@@ -1,14 +1,25 @@
 /**
  * CONSTANTS
  */
+const AUDIO_PATH_COIN = './coin.mp3';
+const AUDIO_SWITCH = 'audio_switch';
 const BTN_START = 'start';
 const BTN_PAUSE = 'pause';
 const BTN_RESET = 'reset';
 const INPUT_INTERVAL = 'interval';
 const INPUT_REST = 'rest';
 const INPUT_REPETITIONS = 'repetitions';
+const TEXT_PAUSE = 'Pause';
+const TEXT_RESUME = 'Resume';
 const DIV_TIMER = 'timer';
-const AUDIO_COIN = 'coin.mp3';
+
+
+/**
+ * HELPERS
+ */
+ function getElement(id) {
+    return document.getElementById(id);
+}
 
 
 /**
@@ -23,52 +34,77 @@ const state = {
     repetitions: null,
     rest: null,
 
+    currentTime: null,
     currentInterval: null,
     currentRepetitions: null,
+    isResting: false,
+
+    refs: {
+        btn_start: getElement(BTN_START),
+        btn_pause: getElement(BTN_PAUSE),
+        btn_reset: getElement(BTN_RESET),
+        input_interval: getElement(INPUT_INTERVAL),
+        input_rest: getElement(INPUT_REST),
+        input_repetitions: getElement(INPUT_REPETITIONS),
+        div_timer: getElement(DIV_TIMER),
+    },
+
+    audio: {
+        [AUDIO_SWITCH]: new Audio(AUDIO_PATH_COIN),
+    }
 }
 
-
-/**
- * HELPERS
- */
-function getElement(id) {
-    return document.getElementById(id);
-}
-
-function getValue(id) {
-    return getElement(id).value;
-}
 
 
 /**
  * BUTTON STATES
  */
 function setStartBtnPressedState() {
-    getElement(BTN_START).disabled = true;
-    getElement(BTN_PAUSE).disabled = false;
-    getElement(BTN_RESET).disabled = false;
+    state.refs.btn_start.disabled = true;
+    state.refs.btn_pause.disabled = false;
+    state.refs.btn_reset.disabled = false;
 }
 
 function setResetBtnPressedState() {
-    getElement(BTN_START).disabled = false;
-    getElement(BTN_PAUSE).disabled = true;
-    getElement(BTN_RESET).disabled = true;
+    state.refs.btn_start.disabled = false;
+    state.refs.btn_pause.disabled = true;
+    state.refs.btn_reset.disabled = true;
+}
+
+function setBtnPausedOnState() {
+    state.refs.btn_pause.innerHTML = TEXT_RESUME;
+}
+
+function setBtnPausedOffState() {
+    state.refs.btn_pause.innerHTML = TEXT_PAUSE;
 }
 
 
 /**
  * TIMER
  */
-function calculateTimer() {
-    const elapsedTime = (Date.now() - state.startTime) / 1000;
-    state.currentInterval = (state.interval - elapsedTime).toFixed(3);
+function setStartTime() {
+    state.startTime = Date.now();
 }
 
 function startTimer() {
     state.timer = setInterval(function () {
-        calculateTimer();
+        const elapsedTime = (Date.now() - state.startTime) / 1000;
+        state.currentTime = (state.currentInterval - elapsedTime).toFixed(3);
+        determineSwitch();
         render();
     }, 100);
+}
+
+function determineSwitch() {
+    if (state.currentTime <= 0) {
+        const newInterval = state.isResting ? state.interval : state.rest;
+        state.currentTime = newInterval;
+        state.currentInterval = newInterval;
+        state.isResting = !state.isResting;
+        setStartTime();
+        playAudio(AUDIO_SWITCH);
+    }
 }
 
 function stopTimer() {
@@ -77,54 +113,64 @@ function stopTimer() {
 
 
 /**
- * BUTTON EVENT HANDLERS
+ * INPUT
  */
-function setFromInput() {
-    state.interval = getValue(INPUT_INTERVAL);
-    state.rest = getValue(INPUT_REST);
-    state.repetitions = getValue(INPUT_REPETITIONS);
-    state.currentRepetitions = getValue(INPUT_REPETITIONS);
-    state.currentInterval = getValue(INPUT_INTERVAL);
+ function setFromInput() {
+    const interval = state.refs.input_interval.value;
+    const rest = state.refs.input_rest.value;
+    const repetitions = state.refs.input_repetitions;
+
+    Object.assign(
+        state,
+        {
+            interval,
+            rest,
+            repetitions,
+            currentInterval: interval,
+            currentTime: interval,
+            currentRepetitions: repetitions,
+        },
+    );
 }
 
+
+/**
+ * BUTTON EVENT HANDLERS
+ */
 function start() {
-    if (state.timer && !state.paused) {
-        return;
-    }
-
-    if (!state.paused) {
-        setFromInput();
-        state.startTime = Date.now();
-    }
-
+    setStartTime();
+    setFromInput();
     setStartBtnPressedState();
     startTimer();
 }
 
 function pause() {
-    state.paused = true;
-    stopTimer();
-    beep();
+    if (!state.paused) {
+        stopTimer();
+        state.paused = true;
+        setBtnPausedOnState();
+    } else {
+        startTimer();
+        state.paused = false;
+        setBtnPausedOffState();
+    }
 }
 
 function reset() {
-    state.timer = null;
-    state.paused = false;
     stopTimer();
     setFromInput();
-    render();
     setResetBtnPressedState();
+    render();
 }
 
 
 /**
  * A/V
  */
-function beep() {
-    const audio = new Audio(AUDIO_COIN);
-    audio.play();
+function playAudio(property) {
+    state.audio[property].play();
 }
 
 function render() {
-    getElement(DIV_TIMER).innerHTML = state.currentInterval;
+    state.refs.div_timer.innerHTML = state.currentTime;
 }
