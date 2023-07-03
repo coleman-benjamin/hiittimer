@@ -144,11 +144,11 @@ function startTimer() {
         state.currentTime = (state.currentInterval - (elapsedTime / 1000)).toFixed(3);
         determineSwitch();
         render();
-    }, 100);
+    }, 50);
 }
 
 function determineSwitch() {
-    if (state.currentTime <= 0) {
+    if (state.currentTime < 0) {
         const newInterval = state.isResting ? state.interval : state.rest;
         state.currentTime = newInterval;
         state.currentInterval = newInterval;
@@ -157,16 +157,12 @@ function determineSwitch() {
         state.pausedTime = 0;
         state.currentRoundStart = Date.now();
 
-        if (state.remainingActivities < 0) {
+        if (state.remainingActivities === 0) {
             reset();
         }
 
         playAudio(AUDIO_SWITCH);
     }
-}
-
-function stopTimer() {
-    clearInterval(state.timer);
 }
 
 
@@ -195,7 +191,7 @@ function pause() {
 }
 
 function reset() {
-    stopTimer();
+    clearInterval(state.timer);
     initializeState();
     setResetBtnPressedState();
     render();
