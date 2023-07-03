@@ -1,6 +1,7 @@
 /**
  * CONSTANTS
  */
+const KEY_STORAGE = 'hiittimer-input';
 const AUDIO_PATH_COIN = './coin.mp3';
 const AUDIO_SWITCH = 'audio_switch';
 const BTN_START = 'start';
@@ -8,7 +9,7 @@ const BTN_PAUSE = 'pause';
 const BTN_RESET = 'reset';
 const INPUT_INTERVAL = 'interval';
 const INPUT_REST = 'rest';
-const INPUT_REPETITIONS = 'repetitions';
+const INPUT_ACTIVITIES = 'activities';
 const TEXT_PAUSE = 'Pause';
 const TEXT_RESUME = 'Resume';
 const DIV_TIMER = 'timer';
@@ -26,18 +27,20 @@ const DIV_TIMER = 'timer';
  * STATE
  */
 const state = {
-    startTime: null,
-    timer: null,
-    paused: false,
-
     interval: null,
-    repetitions: null,
+    activities: null,
     rest: null,
-
+    currentRoundStart: null,
     currentTime: null,
     currentInterval: null,
-    currentRepetitions: null,
+    remainingActivities: null,
     isResting: false,
+    startTime: null,
+    timer: null,
+    paused: null,
+    pauseStarted: null,
+    pausedTime: null,
+
 
     refs: {
         btn_start: getElement(BTN_START),
@@ -45,7 +48,7 @@ const state = {
         btn_reset: getElement(BTN_RESET),
         input_interval: getElement(INPUT_INTERVAL),
         input_rest: getElement(INPUT_REST),
-        input_repetitions: getElement(INPUT_REPETITIONS),
+        input_activities: getElement(INPUT_ACTIVITIES),
         div_timer: getElement(DIV_TIMER),
     },
 
@@ -54,21 +57,70 @@ const state = {
     }
 }
 
+function initializeState() {
+    const storage = localStorage.getItem(KEY_STORAGE);
+    if (storage) {
+        Object.assign(state, { ...JSON.parse(storage) });
+        state.refs.input_interval.value = state.interval;
+        state.refs.input_rest.value = state.rest;
+        state.refs.input_activities.value = state.activities;
+    } else {
+        Object.assign(
+            state,
+            {
+                interval: state.refs.input_interval.value,
+                rest: state.refs.input_rest.value,
+                activities: state.refs.input_activities.value,
+            },
+        );
+    }
+
+    Object.assign(
+        state,
+        {
+            currentInterval: Number(state.interval),
+            currentTime: Number(state.interval),
+            remainingActivities: Number(state.activities) * 2,
+            paused: false,
+            pauseStarted: 0,
+            pausedTime: 0,
+            isResting: false,
+        }
+    );
+}
+
+function setStorageFromInput() {
+    localStorage.setItem(
+        KEY_STORAGE,
+        JSON.stringify({
+            interval: state.refs.input_interval.value,
+            rest: state.refs.input_rest.value,
+            activities: state.refs.input_activities.value,
+        }),
+    );
+}
 
 
 /**
- * BUTTON STATES
+ * FORM STATES
  */
 function setStartBtnPressedState() {
     state.refs.btn_start.disabled = true;
     state.refs.btn_pause.disabled = false;
     state.refs.btn_reset.disabled = false;
+    state.refs.input_interval.disabled = true;
+    state.refs.input_rest.disabled = true;
+    state.refs.input_activities.disabled = true;
+
 }
 
 function setResetBtnPressedState() {
     state.refs.btn_start.disabled = false;
     state.refs.btn_pause.disabled = true;
     state.refs.btn_reset.disabled = true;
+    state.refs.input_interval.disabled = false;
+    state.refs.input_rest.disabled = false;
+    state.refs.input_activities.disabled = false;
 }
 
 function setBtnPausedOnState() {
@@ -83,14 +135,13 @@ function setBtnPausedOffState() {
 /**
  * TIMER
  */
-function setStartTime() {
-    state.startTime = Date.now();
-}
-
 function startTimer() {
     state.timer = setInterval(function () {
-        const elapsedTime = (Date.now() - state.startTime) / 1000;
-        state.currentTime = (state.currentInterval - elapsedTime).toFixed(3);
+        if (state.paused) {
+            return;
+        }
+        const elapsedTime = state.pausedTime + (Date.now() - state.currentRoundStart);
+        state.currentTime = (state.currentInterval - (elapsedTime / 1000)).toFixed(3);
         determineSwitch();
         render();
     }, 100);
@@ -101,8 +152,15 @@ function determineSwitch() {
         const newInterval = state.isResting ? state.interval : state.rest;
         state.currentTime = newInterval;
         state.currentInterval = newInterval;
+        state.remainingActivities = state.remainingActivities - 1;
         state.isResting = !state.isResting;
-        setStartTime();
+        state.pausedTime = 0;
+        state.currentRoundStart = Date.now();
+
+        if (state.remainingActivities < 0) {
+            reset();
+        }
+
         playAudio(AUDIO_SWITCH);
     }
 }
@@ -113,52 +171,32 @@ function stopTimer() {
 
 
 /**
- * INPUT
- */
- function setFromInput() {
-    const interval = state.refs.input_interval.value;
-    const rest = state.refs.input_rest.value;
-    const repetitions = state.refs.input_repetitions;
-
-    Object.assign(
-        state,
-        {
-            interval,
-            rest,
-            repetitions,
-            currentInterval: interval,
-            currentTime: interval,
-            currentRepetitions: repetitions,
-        },
-    );
-}
-
-
-/**
  * BUTTON EVENT HANDLERS
  */
 function start() {
-    setStartTime();
-    setFromInput();
+    state.currentRoundStart = Date.now();
+    setStorageFromInput();
+    initializeState();
     setStartBtnPressedState();
     startTimer();
 }
 
 function pause() {
+    const now = Date.now();
     if (!state.paused) {
-        stopTimer();
         state.paused = true;
+        state.pauseStarted = now;        
         setBtnPausedOnState();
     } else {
-        startTimer();
         state.paused = false;
+        state.pausedTime = state.pausedTime + state.pauseStarted - now;
         setBtnPausedOffState();
     }
 }
 
 function reset() {
     stopTimer();
-    setFromInput();
+    initializeState();
     setResetBtnPressedState();
     render();
 }
@@ -174,3 +212,10 @@ function playAudio(property) {
 function render() {
     state.refs.div_timer.innerHTML = state.currentTime;
 }
+
+
+/**
+ * Main
+ */
+initializeState();
+render();
