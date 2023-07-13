@@ -1,10 +1,47 @@
+body {
+    background-color: #121212;
+    color: #FFF;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
 main {
-    width: 100%;
+    width: 100%;    
+}
+
+.section {
+    width: 500px;
+    display: flex;
+    justify-content: center;
+    margin: 24px auto;
+    padding: 24px;
+    background-color: #2c2c2c;
+}
+
+.inputs {
+    display: grid;
+    grid-template-columns: 80px 12px 54px auto;
+}
+
+.inputs input {
+    width: 50px;
+    margin-bottom: 8px;
+}
+
+.inputs .indicator {
+    opacity: 0.7;
+}
+
+.controls button {
+    margin: 0 12px;
+    background-color: #bb86fc;
+}
+
+.display {
+    border: 1px dashed #FFF;
+    padding: 100px 24px;
 }
 
 #timer {
-    margin: 100px auto;
-    width: 80%;
     font-size: 160px;
     text-align: center;
 }
