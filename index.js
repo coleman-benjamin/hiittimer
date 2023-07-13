@@ -37,6 +37,7 @@ const state = {
     isResting: false,
     startTime: null,
     timer: null,
+    started: null,
     paused: null,
     pauseStarted: null,
     pausedTime: null,
@@ -81,6 +82,7 @@ function initializeState() {
             currentInterval: Number(state.interval),
             currentTime: Number(state.interval),
             remainingActivities: Number(state.activities) * 2,
+            started: false,
             paused: false,
             pauseStarted: 0,
             pausedTime: 0,
@@ -175,6 +177,7 @@ function start() {
     initializeState();
     setStartBtnPressedState();
     startTimer();
+    state.started = true;
 }
 
 function pause() {
@@ -197,6 +200,10 @@ function reset() {
     render();
 }
 
+function startOrPause() {
+    state.started ? pause() : start();
+}
+
 
 /**
  * A/V
@@ -208,6 +215,22 @@ function playAudio(property) {
 function render() {
     state.refs.div_timer.innerHTML = state.currentTime;
 }
+
+
+/**
+ * Keyboard Input
+ */
+const keyboardEvents = {
+    'Enter': startOrPause,
+    'Space': startOrPause,
+    'Escape': reset,
+}
+
+document.addEventListener('keydown', (event) => {
+    if (Object.keys(keyboardEvents).includes(event.code)) {
+        keyboardEvents[event.code]()
+    }
+}, false);
 
 
 /**
