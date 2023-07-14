@@ -4,12 +4,12 @@
 const KEY_STORAGE = 'hiittimer-input';
 const AUDIO_PATH_COIN = './coin.mp3';
 const AUDIO_SWITCH = 'audio_switch';
-const BTN_START = 'start';
-const BTN_PAUSE = 'pause';
+const BTN_ON = 'on';
 const BTN_RESET = 'reset';
 const INPUT_INTERVAL = 'interval';
 const INPUT_REST = 'rest';
 const INPUT_ACTIVITIES = 'activities';
+const TEXT_START = 'Start';
 const TEXT_PAUSE = 'Pause';
 const TEXT_RESUME = 'Resume';
 const DIV_TIMER = 'timer';
@@ -44,8 +44,7 @@ const state = {
 
 
     refs: {
-        btn_start: getElement(BTN_START),
-        btn_pause: getElement(BTN_PAUSE),
+        btn_on: getElement(BTN_ON),
         btn_reset: getElement(BTN_RESET),
         input_interval: getElement(INPUT_INTERVAL),
         input_rest: getElement(INPUT_REST),
@@ -106,31 +105,28 @@ function setStorageFromInput() {
 /**
  * FORM STATES
  */
-function setStartBtnPressedState() {
-    state.refs.btn_start.disabled = true;
-    state.refs.btn_pause.disabled = false;
+function setBtnStartedStated() {
     state.refs.btn_reset.disabled = false;
     state.refs.input_interval.disabled = true;
     state.refs.input_rest.disabled = true;
     state.refs.input_activities.disabled = true;
-
+    state.refs.btn_on.innerHTML = TEXT_PAUSE;
 }
 
-function setResetBtnPressedState() {
-    state.refs.btn_start.disabled = false;
-    state.refs.btn_pause.disabled = true;
+function setBtnResetState() {
     state.refs.btn_reset.disabled = true;
     state.refs.input_interval.disabled = false;
     state.refs.input_rest.disabled = false;
     state.refs.input_activities.disabled = false;
+    state.refs.btn_on.innerHTML = TEXT_START;
 }
 
-function setBtnPausedOnState() {
-    state.refs.btn_pause.innerHTML = TEXT_RESUME;
+function setBtnPausedState() {
+    state.refs.btn_on.innerHTML = TEXT_RESUME;
 }
 
-function setBtnPausedOffState() {
-    state.refs.btn_pause.innerHTML = TEXT_PAUSE;
+function setBtnUnpausedState() {
+    state.refs.btn_on.innerHTML = TEXT_PAUSE;
 }
 
 
@@ -175,7 +171,7 @@ function start() {
     state.currentRoundStart = Date.now();
     setStorageFromInput();
     initializeState();
-    setStartBtnPressedState();
+    setBtnStartedStated();
     startTimer();
     state.started = true;
 }
@@ -185,18 +181,18 @@ function pause() {
     if (!state.paused) {
         state.paused = true;
         state.pauseStarted = now;        
-        setBtnPausedOnState();
+        setBtnPausedState();
     } else {
         state.paused = false;
         state.pausedTime = state.pausedTime + state.pauseStarted - now;
-        setBtnPausedOffState();
+        setBtnUnpausedState();
     }
 }
 
 function reset() {
     clearInterval(state.timer);
     initializeState();
-    setResetBtnPressedState();
+    setBtnResetState();
     render();
 }
 

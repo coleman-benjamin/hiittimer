@@ -27,17 +27,41 @@ main {
     margin-bottom: 8px;
 }
 
+.inputs input:disabled {
+    background-color: #AAA;
+}
+
 .inputs .indicator {
     opacity: 0.7;
 }
 
 .controls button {
     margin: 0 12px;
-    background-color: #bb86fc;
+    border: 2px solid #333;
+    padding: 14px 28px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #FFF;
+    color: #333;
+    width: 120px;
+}
+
+#reset {
+    background-color: #FFAAAA;
+}
+
+.controls button:disabled,
+#reset:disabled {
+    background-color: #AAA;
+    color: #333;
+}
+
+.controls button:hover {
+    background-color: #74E39A;
 }
 
 .display {
-    border: 1px dashed #FFF;
+    border: 1px dashed #74E39A;
     padding: 100px 24px;
 }
 
