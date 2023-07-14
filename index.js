@@ -153,10 +153,13 @@ function determineSwitch() {
         state.remainingActivities = state.remainingActivities - 1;
         state.isResting = !state.isResting;
         state.pausedTime = 0;
-        state.currentRoundStart = Date.now();
+        state.currentRoundStart = Date.now();        
 
         if (state.remainingActivities === 0) {
             reset();
+        } else {
+            clearInterval(state.timer);
+            startTimer()
         }
 
         playAudio(AUDIO_SWITCH);
@@ -222,7 +225,7 @@ const keyboardEvents = {
     'Escape': reset,
 }
 
-document.addEventListener('keydown', (event) => {
+document.addEventListener('keyup', (event) => {
     if (Object.keys(keyboardEvents).includes(event.code)) {
         keyboardEvents[event.code]()
     }
